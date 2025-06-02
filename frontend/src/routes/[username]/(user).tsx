@@ -1,21 +1,21 @@
 import { A, useNavigate, useParams } from "@solidjs/router";
-import RecentNotes from "../../components/recent_notes";
-import UserSearchModal from "../../components/modals/user_search";
-import { useModal } from "../../contexts/ModalProvider";
-import { useCurrentUser } from "../../contexts/CurrentUserProvider";
 import { Show } from "solid-js";
-import Icon from "../../components/icon";
-import NewBookModal from "../../components/modals/new_book";
-import { Book } from "../../core/types";
-import { useDrawer } from "../../contexts/DrawerProvider";
-import { useApi } from "../../contexts/ApiProvider";
+import RecentNotes from "~/components/recent_notes";
+import UserSearchModal from "~/components/modals/user_search";
+import { useModal } from "~/contexts/ModalProvider";
+import Icon from "~/components/icon";
+import NewBookModal from "~/components/modals/new_book";
+import { Book } from "~/core/types";
+import { useDrawer } from "~/contexts/DrawerProvider";
+import { useAuth } from "~/contexts/AuthProvider";
+import { useApi } from "~/contexts/ApiProvider";
 
 const User = () => {
   const params = useParams()
   const navigate = useNavigate()
-  const { apiDetails, setApiDetails } = useApi()
+  const { accessToken, setAuthStore } = useAuth()
   const { setModal, clearModal } = useModal()
-  const { user } = useCurrentUser()
+  const { userInfo } = useApi()
   const drawer = useDrawer()
 
   const openUserSearchModal = () => {
@@ -34,7 +34,7 @@ const User = () => {
         onClose: (newBook?: Book) => {
           if (newBook) drawer.updateBook(newBook)
           clearModal()
-        }, user: user()
+        }, user: userInfo()
       },
     })
   }
@@ -45,8 +45,8 @@ const User = () => {
       <div class="max-w-md mx-auto text-center">
         <div class="join">
           <Show
-            when={user() !== undefined} fallback={
-              <Show when={apiDetails().authToken} fallback={
+            when={userInfo() !== undefined} fallback={
+              <Show when={accessToken()} fallback={
                 <A
                   class="join-item btn btn-outline"
                   href="/login"
@@ -54,15 +54,15 @@ const User = () => {
               }>
                 <button
                   class="join-item btn btn-outline" onclick={() => {
-                    setApiDetails({ authToken: undefined })
+                    setAuthStore(null)
                     navigate("/login")
                   }}>Re-Login</button>
               </Show>
             }>
-            <Show when={user()?.username === params.username} fallback={
+            <Show when={userInfo()?.username === params.username} fallback={
               <A
                 class="btn join-item btn-outline"
-                href={`/${user()?.username}`}
+                href={`/${userInfo()?.username}`}
               >My Notes</A>
             }>
               <button

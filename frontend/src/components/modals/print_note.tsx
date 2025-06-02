@@ -1,9 +1,9 @@
 import { Component, Suspense, createResource } from "solid-js"
-import BaseModal from "./base"
-import render from "../../core/renderer"
-import { LoadingRing } from "../loading"
-import Icon from "../icon"
-import { Context } from "../../../renderer/pkg/renderer"
+import BaseModal from "~/components/modals/base"
+import render from "~/core/renderer"
+import { LoadingRing } from "~/components/loading"
+import Icon from "~/components/icon"
+import { type Context } from "~/core/renderer"
 
 type PrintNoteModalProps = {
   onClose: () => any

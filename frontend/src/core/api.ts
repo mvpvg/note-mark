@@ -1,5 +1,5 @@
-import { Result } from "./core"
-import { Book, CreateBook, CreateNote, CreateUser, Note, NoteAsset, OAuth2AccessToken, OAuth2AccessTokenRequest, ServerInfo, UpdateBook, UpdateNote, UpdateUser, UpdateUserPassword, User, ValueWithSlug } from "./types"
+import { Result } from "~/core/core"
+import { Book, CreateBook, CreateNote, CreateUser, Note, NoteAsset, OAuth2AccessToken, OAuth2AccessTokenRequest, ServerInfo, UpdateBook, UpdateNote, UpdateUser, UpdateUserPassword, User, ValueWithSlug } from "~/core/types"
 
 export enum HttpMethods {
   GET = "GET",
@@ -25,11 +25,6 @@ export enum HttpErrors {
   PreconditionFailed = 412,
 
   InternalServerError = 500,
-}
-
-export type ApiHandlerConfig = {
-  authToken?: string
-  apiServer: string
 }
 
 const HEADER_JSON = { "Content-Type": "application/json" }
@@ -72,32 +67,21 @@ async function handleBodyErrors<T>(v: Promise<T>): Promise<Result<T, ApiError>> 
 }
 
 class Api {
-  private authToken?: string
   private apiServer: string
-  constructor(apiDetails: ApiHandlerConfig) {
-    this.authToken = apiDetails.authToken
-    this.apiServer = apiDetails.apiServer
-  }
-  /**
-   * allows for adjusting the main settings
-   * without requiring a new object to be created.
-   * @param apiDetails the new details
-   * @returns self
-   */
-  setApi(apiDetails: ApiHandlerConfig): Api {
-    this.authToken = apiDetails.authToken
-    this.apiServer = apiDetails.apiServer
-    return this
+  private accessToken?: string
+  constructor(apiToken?: string) {
+    this.apiServer = (new URL("/api", import.meta.env.VITE_BACKEND_URL || window.location.origin)).toString()
+    this.accessToken = apiToken
   }
   isAuthenticated(): boolean {
-    return this.authToken !== undefined
+    return this.accessToken !== undefined
   }
   headerAuthorization(): Record<string, string> {
-    return { "Authorization": `Bearer ${this.authToken}` }
+    return { "Authorization": `Bearer ${this.accessToken}` }
   }
   optionalHeaderAuthorization(): Record<string, string> {
     if (!this.isAuthenticated()) return {}
-    return { "Authorization": `Bearer ${this.authToken}` }
+    return { "Authorization": `Bearer ${this.accessToken}` }
   }
   //
   // Server
@@ -133,6 +117,23 @@ class Api {
   }
   async postTokenPasswordFlow(username: string, password: string): Promise<Result<OAuth2AccessToken, ApiError>> {
     return await this.postToken({ grant_type: "password", username, password })
+  }
+  async postExchangeOidcToken(
+    oidcAccessToken: OAuth2AccessToken,
+    usernameHint: string,
+  ): Promise<OAuth2AccessToken> {
+    let reqURL = `${this.apiServer}/auth/oidc-exchange`
+    let resp = await handleFetchErrors(fetch(reqURL, {
+      method: HttpMethods.POST,
+      body: JSON.stringify(oidcAccessToken),
+      headers: {
+        "Username-Hint": usernameHint,
+        ...HEADER_JSON,
+      },
+    }))
+    if (resp instanceof Error) { throw resp }
+    await throwResponseApiErrors(resp)
+    return handleBodyErrors(resp.json())
   }
   //
   // User
@@ -179,7 +180,7 @@ class Api {
   async updateUser(user: UpdateUser): Promise<Result<undefined, ApiError>> {
     let reqURL = `${this.apiServer}/users/me`
     let resp = await handleFetchErrors(fetch(reqURL, {
-      method: HttpMethods.PATCH,
+      method: HttpMethods.PUT,
       headers: {
         ...HEADER_JSON,
         ...this.headerAuthorization(),
@@ -236,7 +237,7 @@ class Api {
   async updateBook(bookId: string, book: UpdateBook): Promise<Result<undefined, ApiError>> {
     let reqURL = `${this.apiServer}/books/${bookId}`
     let resp = await handleFetchErrors(fetch(reqURL, {
-      method: HttpMethods.PATCH,
+      method: HttpMethods.PUT,
       headers: {
         ...HEADER_JSON,
         ...this.headerAuthorization(),
@@ -331,7 +332,7 @@ class Api {
   async updateNote(noteId: string, book: UpdateNote): Promise<Result<undefined, ApiError>> {
     let reqURL = `${this.apiServer}/notes/${noteId}`
     let resp = await handleFetchErrors(fetch(reqURL, {
-      method: HttpMethods.PATCH,
+      method: HttpMethods.PUT,
       headers: {
         ...HEADER_JSON,
         ...this.headerAuthorization(),

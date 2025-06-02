@@ -17,6 +17,7 @@ Note Mark is a lighting fast and minimal; web-based Markdown notes app. Featurin
 - Multiple views for a note (rendered, plain)
 - Lighting fast editor with shortcuts
 - Upload and attach assets
+- OIDC support for Single-Sign-On
 
 ## Showcase
 ![Preview Image Showing App](site/static/preview.webp)
@@ -29,7 +30,7 @@ Note Mark is a lighting fast and minimal; web-based Markdown notes app. Featurin
 ## Docs
 Documentation is available here: [notemark.docs.enchantedcode.co.uk](https://notemark.docs.enchantedcode.co.uk/).
 
-> Checkout [here](https://github.com/enchant97/note-mark/issues/47) for the roadmap.
+> Checkout the [roadmap here](https://github.com/users/enchant97/projects/7).
 
 ## Support Me
 Like this project? Consider supporting me financially so I can continue development.
