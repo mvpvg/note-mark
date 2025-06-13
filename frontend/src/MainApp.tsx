@@ -1,19 +1,21 @@
 import { useParams, A, useNavigate } from '@solidjs/router';
 import { Component, For, ParentProps, Show, createResource, createSignal, onCleanup, onMount } from 'solid-js';
-import Header from './components/header';
-import { useApi } from './contexts/ApiProvider';
-import { DrawerProvider } from './contexts/DrawerProvider';
-import { Book, Note, User } from './core/types';
-import { LoadingRing } from './components/loading';
-import { ApiError } from './core/api';
-import { SortChoice, SortSelect } from './components/inputs';
-import { compare } from './core/helpers';
-import Icon from './components/icon';
-import { apiErrorIntoToast, useToast } from './contexts/ToastProvider';
-import { useModal } from './contexts/ModalProvider';
-import ContentSearchModal, { SearchableBook, SearchableNote } from './components/modals/content_search';
+import Header from '~/components/header';
+import { useApi } from '~/contexts/ApiProvider';
+import { DrawerProvider } from '~/contexts/DrawerProvider';
+import { Book, Note, User } from '~/core/types';
+import { LoadingRing } from '~/components/loading';
+import { ApiError } from '~/core/api';
+import { SortChoice, SortSelect } from '~/components/inputs';
+import { compare } from '~/core/helpers';
+import Icon from '~/components/icon';
+import { apiErrorIntoToast, useToast } from '~/contexts/ToastProvider';
+import { useModal } from '~/contexts/ModalProvider';
+import ContentSearchModal, { SearchableBook, SearchableNote } from '~/components/modals/content_search';
 
-function performBookOrNoteSort(rows: Note[] | Book[], method: SortChoice) {
+type BookOrNote = Book | Note
+
+function performBookOrNoteSort<T extends BookOrNote>(rows: T[], method: SortChoice) {
   switch (method) {
     case SortChoice.NAME_ASC:
       return rows.sort((a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base', numeric: true }))
@@ -60,7 +62,7 @@ const MainApp: Component<ParentProps> = (props) => {
       pushToast(apiErrorIntoToast(result, `loading data for ${username}`))
     } else {
       let data = new Map<string, MappedUser>(Object.entries(result))
-      let books = new Map(Object.entries(result.books!).map((v) => {
+      let books = new Map(Object.entries(result.books || []).map((v) => {
         let book = new Map(Object.entries(v[1]))
         book.set("notes", new Map(v[1].notes?.map((v) => [v.id, v])) || new Map())
         return [v[1].id, book]

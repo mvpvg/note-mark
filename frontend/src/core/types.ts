@@ -10,10 +10,18 @@ export type BreadcrumbWithNames = Breadcrumb & {
   noteName?: string
 }
 
+export interface OidcProviderInfo {
+  displayName: string
+  issuerUrl: string
+  clientId: string
+}
+
 export type ServerInfo = {
   minSupportedVersion: string
-  allowSignup: boolean
+  allowInternalSignup: boolean
+  allowInternalLogin: boolean
   enableAnonymousUserSearch: boolean
+  oidcProvider?: OidcProviderInfo
 }
 
 export type OAuth2AccessTokenRequest = {
@@ -108,14 +116,14 @@ export type UpdateUserPassword = {
 }
 
 export type UpdateBook = {
-  name?: string
-  slug?: string
-  isPublic?: boolean
+  name: string
+  slug: string
+  isPublic: boolean
 }
 
 export type UpdateNote = {
-  name?: string
-  slug?: string
+  name: string
+  slug: string
 }
 
 export function bookIntoUpdateBook(book: Book): UpdateBook {

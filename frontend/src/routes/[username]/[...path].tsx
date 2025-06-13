@@ -1,33 +1,31 @@
 import { Component, Show, createEffect, createResource, createSignal } from 'solid-js';
-import { useApi } from '../../contexts/ApiProvider';
-import { useParams } from '@solidjs/router';
-import { Book, Breadcrumb, BreadcrumbWithNames, Note as NoteDetails } from '../../core/types';
-import NoteBreadcrumb from '../../components/note/breadcrumb';
-import { useModal } from '../../contexts/ModalProvider';
-import { useCurrentUser } from '../../contexts/CurrentUserProvider';
-import NewBookModal from '../../components/modals/new_book';
-import NewNoteModal from '../../components/modals/new_note';
-import UpdateBookModal from '../../components/modals/edit_book';
-import UpdateNoteModal from '../../components/modals/edit_note';
-import { useDrawer } from '../../contexts/DrawerProvider';
-import { LoadingRing } from '../../components/loading';
-import { ToastType, apiErrorIntoToast, useToast } from '../../contexts/ToastProvider';
-import { ApiError } from '../../core/api';
-import Icon from '../../components/icon';
-import Note, { NoteMode } from '../../components/note';
-import StorageHandler from '../../core/storage';
-import AssetsModal from '../../components/modals/assets';
-import { StringSource, copyToClipboard, download } from '../../core/helpers';
-import PrintNoteModal from '../../components/modals/print_note';
 import { createStore } from 'solid-js/store';
-import { EditorState } from '../../components/editor/editor';
-import { Context } from '../../../renderer/pkg/renderer';
+import { useParams } from '@solidjs/router';
+import { useApi } from '~/contexts/ApiProvider';
+import { Book, Breadcrumb, BreadcrumbWithNames, Note as NoteDetails } from '~/core/types';
+import NoteBreadcrumb from '~/components/note/breadcrumb';
+import { useModal } from '~/contexts/ModalProvider';
+import NewBookModal from '~/components/modals/new_book';
+import NewNoteModal from '~/components/modals/new_note';
+import UpdateBookModal from '~/components/modals/edit_book';
+import UpdateNoteModal from '~/components/modals/edit_note';
+import { useDrawer } from '~/contexts/DrawerProvider';
+import { LoadingRing } from '~/components/loading';
+import { ToastType, apiErrorIntoToast, useToast } from '~/contexts/ToastProvider';
+import { ApiError } from '~/core/api';
+import Icon from '~/components/icon';
+import Note, { NoteMode } from '~/components/note';
+import StorageHandler from '~/core/storage';
+import AssetsModal from '~/components/modals/assets';
+import { StringSource, copyToClipboard, download } from '~/core/helpers';
+import PrintNoteModal from '~/components/modals/print_note';
+import { EditorState } from '~/components/editor/editor';
+import { Context } from '~/core/renderer';
 
 const Shelf: Component = () => {
   const params = useParams()
-  const { api } = useApi()
+  const { api, userInfo } = useApi()
   const { pushToast } = useToast()
-  const { user } = useCurrentUser()
   const { setModal, clearModal } = useModal()
   const drawer = useDrawer()
   const { currentUser, currentBook: book, currentNote: note } = drawer
@@ -60,11 +58,11 @@ const Shelf: Component = () => {
   }
 
   const allowBookCreate = () => {
-    return user()?.username === slugParts().username
+    return userInfo()?.username === slugParts().username
   }
 
   const allowNoteCreate = () => {
-    return user() && (book() && user()?.id === book()?.ownerId)
+    return userInfo() && (book() && userInfo()?.id === book()?.ownerId)
   }
 
   const [noteContent, { mutate: setNoteContent }] = createResource(note, async (note) => {
@@ -100,7 +98,7 @@ const Shelf: Component = () => {
         onClose: (newBook?: Book) => {
           if (newBook) drawer.updateBook(newBook)
           clearModal()
-        }, user: user()
+        }, user: userInfo()
       },
     })
   }
@@ -111,7 +109,7 @@ const Shelf: Component = () => {
         onClose: (newNote?: NoteDetails) => {
           if (newNote) drawer.updateNote(newNote)
           clearModal()
-        }, user: user(), book: book()
+        }, user: userInfo(), book: book()
       },
     })
   }
@@ -130,7 +128,7 @@ const Shelf: Component = () => {
           drawer.deleteBook(bookId)
           clearModal()
         },
-        user: user(),
+        user: userInfo(),
         book: book(),
         restoreNote: drawer.updateNote,
       },
@@ -151,7 +149,7 @@ const Shelf: Component = () => {
           drawer.deleteNote(noteId)
           clearModal()
         },
-        user: user(), book: book(), note: note(),
+        user: userInfo(), book: book(), note: note(),
       },
     })
   }
